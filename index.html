@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelling Game: About Me</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* New Galaxy Dream theme */
+            --primary-color: #8A2BE2; /* Blue Violet */
+            --primary-dark: #7B1FA2; /* Darker Purple */
+            --background-gradient: linear-gradient(135deg, #E6E6FA 0%, #B0E0E6 100%); /* Lavender to Powder Blue */
+            --container-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #333;
+            --light-text: #555;
+            --success-color: #4CAF50;
+            --error-color: #D32F2F;
+            --border-color: #E0E0E0;
+            --light-bg-highlight: #F3E5F5; /* Light Purple */
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+            color: var(--text-color);
+        }
+        #effect-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #game-container {
+            text-align: center;
+            background: var(--container-bg);
+            padding: 25px 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 680px;
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(10px);
+            z-index: 1;
+        }
+        h1 {
+            font-size: clamp(24px, 5vw, 32px);
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        p {
+            font-size: clamp(15px, 4vw, 17px);
+            line-height: 1.6;
+            margin-top: 0;
+        }
+        .instruction-vi {
+            font-size: clamp(13px, 3.5vw, 15px);
+            color: var(--light-text);
+            margin-top: 4px;
+            display: block;
+        }
+        .instruction-extra {
+            font-size: clamp(13px, 3.5vw, 14px);
+            color: var(--error-color);
+            font-weight: 600;
+            margin-top: 4px;
+            display: block;
+        }
+        #vietnamese-translation {
+            font-size: clamp(16px, 4.5vw, 19px);
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 20px 0 10px 0;
+            padding: 10px;
+            background-color: var(--light-bg-highlight);
+            border-radius: 12px;
+            min-height: 30px;
+        }
+        input[type="text"] {
+            padding: 12px 18px;
+            font-size: clamp(14px, 4vw, 16px);
+            width: 100%;
+            max-width: 500px;
+            margin: 15px 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            background-color: #fff;
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px rgba(138, 43, 226, 0.2);
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: clamp(14px, 4vw, 16px);
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            touch-action: manipulation;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+        button:hover:not(:disabled) {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(123, 31, 162, 0.2);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #hint {
+            color: var(--light-text);
+            font-style: italic;
+            margin-top: 15px;
+            font-size: clamp(13px, 3.5vw, 15px);
+            user-select: none;
+            line-height: 1.5;
+            min-height: 22px;
+        }
+        #completion, #result {
+            font-size: clamp(15px, 4vw, 18px);
+            font-weight: 600;
+            margin-top: 15px;
+            min-height: 27px;
+        }
+        #result.correct {
+            color: var(--success-color);
+        }
+        #result.incorrect {
+            color: var(--error-color);
+        }
+        .particle {
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="effect-container"></div>
+    <div id="game-container">
+        <h1>Spelling Game: About Me</h1>
+        <p>Click Start to begin the game!<span class="instruction-vi">Nhấn Bắt đầu để chơi!</span></p>
+        <button onclick="startGame()">Start</button>
+    </div>
+
+    <script>
+        // Data for the game
+        const sentences = [
+            { english: "What do you look like?", vietnamese: "Trông bạn như thế nào?" },
+            { english: "I have short hair.", vietnamese: "Tôi có tóc ngắn." },
+            { english: "I have long hair.", vietnamese: "Tôi có tóc dài." },
+            { english: "I have brown eyes.", vietnamese: "Tôi có mắt màu nâu." },
+            { english: "I have big feet.", vietnamese: "Tôi có bàn chân to." },
+            { english: "Where do you live?", vietnamese: "Bạn sống ở đâu?" },
+            { english: "I live in a house.", vietnamese: "Tôi sống trong một ngôi nhà." },
+            { english: "I live in an apartment.", vietnamese: "Tôi sống trong một căn hộ." },
+            { english: "I live in a city.", vietnamese: "Tôi sống ở thành phố." },
+            { english: "I live in the mountains.", vietnamese: "Tôi sống ở trên núi." },
+            { english: "Who do you live with?", vietnamese: "Bạn sống với ai?" },
+            { english: "I live with my grandfather.", vietnamese: "Tôi sống với ông của tôi." },
+            { english: "I live with my baby brother.", vietnamese: "Tôi sống với em trai nhỏ của tôi." },
+            { english: "I live with my cousins.", vietnamese: "Tôi sống với anh chị em họ của tôi." },
+            { english: "I live with my family.", vietnamese: "Tôi sống với gia đình của tôi." },
+            { english: "What do you like?", vietnamese: "Bạn thích gì?" },
+            { english: "I like to dance.", vietnamese: "Tôi thích khiêu vũ." },
+            { english: "I like to watch TV.", vietnamese: "Tôi thích xem TV." },
+            { english: "I like to play games.", vietnamese: "Tôi thích chơi game." },
+            { english: "I like to read books.", vietnamese: "Tôi thích đọc sách." },
+            { english: "My grandfather lives with my grandmother.", vietnamese: "Ông tôi sống với bà tôi." },
+            { english: "She is two years old.", vietnamese: "Cô bé hai tuổi." },
+            { english: "He lives in a city.", vietnamese: "Cậu ấy sống ở thành phố." },
+            { english: "She likes to dance.", vietnamese: "Cô ấy thích khiêu vũ." },
+            { english: "He likes to ski.", vietnamese: "Cậu ấy thích trượt tuyết." },
+            { english: "I like to write.", vietnamese: "Tôi thích viết." },
+            { english: "We like to swim.", vietnamese: "Chúng tôi thích bơi." },
+            { english: "I am 10 years old.", vietnamese: "Tôi 10 tuổi." },
+            { english: "I have brown hair.", vietnamese: "Tôi có tóc màu nâu." },
+            { english: "I have blue eyes.", vietnamese: "Tôi có mắt màu xanh dương." },
+            { english: "I live in the country.", vietnamese: "Tôi sống ở vùng nông thôn." },
+            { english: "I live with my parents.", vietnamese: "Tôi sống với bố mẹ." },
+            { english: "I like to listen to music.", vietnamese: "Tôi thích nghe nhạc." },
+            { english: "I like to ride my bike.", vietnamese: "Tôi thích đạp xe." },
+            { english: "I am a good girl.", vietnamese: "Tôi là một cô bé ngoan." },
+            { english: "I am a good boy.", vietnamese: "Tôi là một cậu bé ngoan." }
+        ];
+        let currentSentenceIndex = 0;
+        let completedCount = 0;
+        let isPlaying = false;
+        let autoPlayInterval;
+        let wrongAttempts = 0;
+        const TOTAL_SENTENCES = sentences.length;
+
+        // Glitter/Confetti effect
+        function showCelebrationEffect() {
+            const launchWave = (delay) => {
+                setTimeout(() => {
+                    const container = document.getElementById('effect-container');
+                    const confettiCount = 50;
+                    const colors = ['#8A2BE2', '#BA55D3', '#DDA0DD', '#E6E6FA', '#FFFFFF'];
+
+                    for (let i = 0; i < confettiCount; i++) {
+                        createConfetti(container, colors);
+                    }
+                }, delay);
+            };
+
+            launchWave(0);
+            launchWave(400);
+            launchWave(800);
+        }
+
+        function createConfetti(container, colors) {
+            const confetti = document.createElement('div');
+            confetti.className = 'particle';
+            container.appendChild(confetti);
+
+            const size = Math.random() * 8 + 4;
+            const xPos = Math.random() * 100;
+
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size * 1.5}px`;
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = `${xPos}vw`;
+            confetti.style.top = '-20px';
+
+            const fallDuration = Math.random() * 2000 + 3000;
+            const horizontalDrift = (Math.random() - 0.5) * 200;
+            const rotation = Math.random() * 720 - 360;
+
+            const animation = confetti.animate([
+                { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${horizontalDrift}px, ${window.innerHeight + 20}px) rotate(${rotation}deg)`, opacity: 0 }
+            ], {
+                duration: fallDuration,
+                easing: 'ease-in-out'
+            });
+
+            animation.onfinish = () => confetti.remove();
+        }
+
+
+        function playSentence() {
+            if (!isPlaying && sentences[currentSentenceIndex]) {
+                isPlaying = true;
+                const utterance = new SpeechSynthesisUtterance(sentences[currentSentenceIndex].english);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.onend = () => {
+                    isPlaying = false;
+                };
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function startAutoPlay() {
+            if (autoPlayInterval) clearInterval(autoPlayInterval);
+            autoPlayInterval = setInterval(() => {
+                if (!isPlaying) {
+                    playSentence();
+                }
+            }, 5000);
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+            }
+        }
+
+        function checkAnswer() {
+            const checkBtn = document.getElementById('checkBtn');
+            if (checkBtn.disabled) return;
+
+            const userInput = document.getElementById('userInput').value.trim();
+            const result = document.getElementById('result');
+            const currentSentence = sentences[currentSentenceIndex].english;
+
+            const normalizeApostrophes = (str) => {
+                return str.replace(/[’‘`]/g, "'");
+            };
+
+            if (normalizeApostrophes(userInput) === normalizeApostrophes(currentSentence)) {
+                stopAutoPlay();
+                checkBtn.disabled = true;
+                document.getElementById('hintBtn').disabled = true;
+                document.getElementById('playSoundBtn').disabled = true;
+
+                result.textContent = "Correct!";
+                result.className = 'correct';
+                
+                showCelebrationEffect();
+
+                if (wrongAttempts < 2) {
+                    completedCount++;
+                    document.getElementById('completion').textContent = `Score: ${completedCount}/${TOTAL_SENTENCES}`;
+                }
+                
+                wrongAttempts = 0;
+                
+                setTimeout(() => {
+                    currentSentenceIndex++;
+                    if (currentSentenceIndex >= TOTAL_SENTENCES) {
+                        document.getElementById('game-container').innerHTML = `<h1>Congratulations!</h1><p>You have completed all sentences with a score of ${completedCount}/${TOTAL_SENTENCES}!</p><button onclick="resetGame()">Play Again</button>`;
+                    } else {
+                        updateGameScreen();
+                        playSentence();
+                        startAutoPlay();
+                    }
+                }, 2000);
+            } else {
+                wrongAttempts++;
+                result.textContent = `Incorrect, try again! (${3 - wrongAttempts} left)`;
+                result.className = 'incorrect';
+                if (wrongAttempts >= 3) {
+                    stopAutoPlay();
+                    checkBtn.disabled = true;
+                    document.getElementById('hintBtn').disabled = true;
+                    document.getElementById('playSoundBtn').disabled = true;
+
+                    wrongAttempts = 0;
+                    result.textContent = "Moving to the next sentence...";
+                    setTimeout(() => {
+                        currentSentenceIndex++;
+                        if (currentSentenceIndex >= TOTAL_SENTENCES) {
+                            document.getElementById('game-container').innerHTML = `<h1>Game Over!</h1><p>You scored ${completedCount} out of ${TOTAL_SENTENCES} sentences.</p><button onclick="resetGame()">Play Again</button>`;
+                        } else {
+                            updateGameScreen();
+                            playSentence();
+                            startAutoPlay();
+                        }
+                    }, 2000);
+                }
+            }
+        }
+
+        function updateGameScreen() {
+            if (document.getElementById('userInput')) {
+                const currentData = sentences[currentSentenceIndex];
+                document.getElementById('userInput').value = '';
+                document.getElementById('vietnamese-translation').textContent = currentData.vietnamese;
+                document.getElementById('hint').textContent = '';
+                document.getElementById('result').textContent = '';
+                document.getElementById('completion').textContent = `Score: ${completedCount}/${TOTAL_SENTENCES}`;
+                
+                const checkBtn = document.getElementById('checkBtn');
+                if (checkBtn) checkBtn.disabled = false;
+                const hintBtn = document.getElementById('hintBtn');
+                if (hintBtn) hintBtn.disabled = false;
+                const playSoundBtn = document.getElementById('playSoundBtn');
+                if (playSoundBtn) playSoundBtn.disabled = false;
+            }
+        }
+
+        function showHint() {
+            const hintData = sentences[currentSentenceIndex];
+            document.getElementById('hint').innerHTML = `Hint: ${hintData.english}`;
+        }
+
+        function startGame() {
+            wrongAttempts = 0;
+            const currentData = sentences[currentSentenceIndex];
+            document.getElementById('game-container').innerHTML = `
+                <h1>Spelling Master</h1>
+                <p>Listen carefully and type the sentence you hear.
+                   <span class="instruction-vi">Hãy lắng nghe cẩn thận và gõ lại câu bạn nghe được.</span>
+                   <span class="instruction-extra">Lưu ý: Phải viết hoa và có dấu câu chính xác.</span>
+                </p>
+                <p id="vietnamese-translation">${currentData.vietnamese}</p>
+                <input type="text" id="userInput" placeholder="Type the sentence here...">
+                <div class="button-group">
+                    <button id="playSoundBtn" onclick="playSentence()">&#9658; Play Sound</button>
+                    <button id="checkBtn" onclick="checkAnswer()">Check</button>
+                    <button id="hintBtn" onclick="showHint()">Hint</button>
+                    <button onclick="resetGame()">Reset Game</button>
+                </div>
+                <p id="completion">Score: ${completedCount}/${TOTAL_SENTENCES}</p>
+                <p id="hint"></p>
+                <p id="result"></p>
+            `;
+            document.getElementById('userInput').addEventListener('keypress', handleKeyPress);
+            playSentence();
+            startAutoPlay();
+        }
+
+        function resetGame() {
+            stopAutoPlay();
+            currentSentenceIndex = 0;
+            completedCount = 0;
+            wrongAttempts = 0;
+            speechSynthesis.cancel();
+            isPlaying = false;
+            document.getElementById('game-container').innerHTML = `
+                <h1>Spelling Game: About Me</h1>
+                <p>Click Start to begin the game!<span class="instruction-vi">Nhấn Bắt đầu để chơi!</span></p>
+                <button onclick="startGame()">Start</button>
+            `;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                checkAnswer();
+            }
+        }
+    </script>
+</body>
+</html>
